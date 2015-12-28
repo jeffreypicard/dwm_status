@@ -7,7 +7,9 @@ Currently implemented features.
 
 * Laptop battery charge (percent)
 * CPU percent usage
+* Memory percent usage
 * Currently playing spotify song
+* date
 
 N.B.
 ====
@@ -19,3 +21,8 @@ a song when dwm_status is run, it will not find the window to pull the name
 from. To correct this, pause the song for a second and then play it again.
 This will give dwm_status time to find the spotify window and then poll it
 for changes.
+
+The memory percent usage seems to be off when compared to utilities such as
+htop. I suspect this is due to not taking into account buffers and cache
+which are reported in /proc/meminfo. At any rate I'm overestimating memory
+usage which is clearly better than underestimating it.
