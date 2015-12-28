@@ -200,9 +200,31 @@ get_mem(char *buf)
 	fclose(meminfo_f);
 }
 
+void
+get_time(char *buf)
+{
+	time_t tm;
+	char *time_s;
+
+	time(&tm);
+
+	time_s = ctime(&tm);
+
+	/* Remove newline */
+	time_s[strlen(time_s)-1] = '\0';
+
+	snprintf(buf, BUF_SIZE, "%s", time_s);
+
+	/* Don't need to free time_s,
+	   since it's a pointer to a static buffer.
+	   Also, don't need ctime_r, since we're single threaded.*/
+}
+
 int
 main(int argc, char **argv)
 {
+	const unsigned char NUM_ATTRS = 5;
+
 	/* Sleep for a half second. */
 	struct timespec rqtp;
 	rqtp.tv_sec = 0;
@@ -215,12 +237,14 @@ main(int argc, char **argv)
 	char cpu[BUF_SIZE],
 	     bat[BUF_SIZE],
 	     spotify[BUF_SIZE],
-	     mem[BUF_SIZE];
-	char buf[4 * BUF_SIZE];
+	     mem[BUF_SIZE],
+	     time[BUF_SIZE];
+	char buf[NUM_ATTRS * BUF_SIZE];
 
 	memset(cpu, 0, BUF_SIZE);
 	memset(bat, 0, BUF_SIZE);
 	memset(mem, 0, BUF_SIZE);
+	memset(time, 0, BUF_SIZE);
 	memset(spotify, 0, BUF_SIZE);
 	
 	while (1) {
@@ -229,17 +253,19 @@ main(int argc, char **argv)
 		get_cpu(cpu);
 		get_bat(bat);
 		get_mem(mem);
+		get_time(time);
 		get_spotify(spotify);
 
-		memset(buf, 0, 4 * BUF_SIZE);
+		memset(buf, 0, NUM_ATTRS * BUF_SIZE);
 
 		snprintf(buf, 
-		         4 * BUF_SIZE,
-		         "BAT: %s%% | MEM: %s%% | CPU: %s%% | SPOTIFY: %s",
+		         NUM_ATTRS * BUF_SIZE,
+		         "BAT: %s%% | MEM: %s%% | CPU: %s%% | SPOTIFY: %s | %s",
 		         bat,
 		         mem,
 		         cpu,
-		         spotify);
+		         spotify,
+		         time);
 
 		set_status(buf);
 	}
