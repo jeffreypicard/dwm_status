@@ -180,6 +180,9 @@ main(int argc, char **argv)
 	rqtp.tv_sec = 0;
 	rqtp.tv_nsec = 500000000L;
 
+	/* Set error handler so we don't crash when spotify closes */
+	XSetErrorHandler(BadWindow_handler);
+
 	/* Maybe don't use static buffers? */
 	char cpu[BUF_SIZE], bat[BUF_SIZE], spotify[BUF_SIZE];
 	char buf[3 * BUF_SIZE];
