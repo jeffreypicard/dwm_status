@@ -99,14 +99,14 @@ set_status(char *status)
 }
 
 void
-get_bat(char *str)
+get_bat(char *buf)
 {
 	uint64_t energy_now, energy_full, percent;
 	FILE *f_eng_now, *f_eng_full;
 	const char *path_now = "/sys/class/power_supply/BAT0/energy_now";
 	const char *path_full = "/sys/class/power_supply/BAT0/energy_full";
 
-	memset(str, 0, BUF_SIZE);
+	memset(buf, 0, BUF_SIZE);
 
 	if (!(f_eng_now = fopen(path_now, "r"))) goto error;
 
@@ -121,26 +121,26 @@ get_bat(char *str)
 
 	percent = (100 * energy_now) / energy_full;
 
-	snprintf(str, BUF_SIZE, "%lu", percent);
+	snprintf(buf, BUF_SIZE, "%lu", percent);
 
 	return;
 
 	error:
-	sprintf(str, "%s", "ERR");
+	sprintf(buf, "%s", "ERR");
 }
 
 void
-get_cpu(char *str)
+get_cpu(char *buf)
 {
 	int i;
 	uint64_t percent, diff_total, diff_idle, total_time, idle_time, cpu[10];
 	FILE *proc_stat;
 
 	memset(cpu, 0, sizeof(cpu));
-	memset(str, 0, BUF_SIZE);
+	memset(buf, 0, BUF_SIZE);
 
 	if (!(proc_stat = fopen("/proc/stat", "r"))) {
-		sprintf(str, "%s", "ERR");
+		sprintf(buf, "%s", "ERR");
 		return;
 	}
 
@@ -149,7 +149,7 @@ get_cpu(char *str)
 		&cpu[6], &cpu[7], &cpu[8], &cpu[9]) == -1) {
 
 		fclose(proc_stat);
-		sprintf(str, "%s", "ERR");
+		sprintf(buf, "%s", "ERR");
 		return;
 	}
 
@@ -168,7 +168,7 @@ get_cpu(char *str)
 
 	percent = (100 * (diff_total - diff_idle)) / diff_total;
 
-	snprintf(str, BUF_SIZE, "%lu", percent);
+	snprintf(buf, BUF_SIZE, "%lu", percent);
 	fclose(proc_stat);
 }
 
