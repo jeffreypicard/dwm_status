@@ -145,8 +145,8 @@ get_cpu(char *buf)
 	}
 
 	if (fscanf(proc_stat, "%*s %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu",
-		&cpu[0], &cpu[1], &cpu[2], &cpu[3], &cpu[4], &cpu[5],
-		&cpu[6], &cpu[7], &cpu[8], &cpu[9]) == -1) {
+	           &cpu[0], &cpu[1], &cpu[2], &cpu[3], &cpu[4], &cpu[5],
+	           &cpu[6], &cpu[7], &cpu[8], &cpu[9]) == -1) {
 
 		fclose(proc_stat);
 		sprintf(buf, "%s", "ERR");
@@ -172,6 +172,34 @@ get_cpu(char *buf)
 	fclose(proc_stat);
 }
 
+void
+get_mem(char *buf)
+{
+	/* Just by eye-balling it this seems to disagree with what htop reports.
+	   I should look more into how to calculate the "true" free amount by
+	   taking into account buffers / cached totals that /proc/meminfo reports.*/
+	FILE *meminfo_f;
+	uint64_t mem_total, mem_free, percent;
+	const char *meminfo = "/proc/meminfo";
+
+	if (!(meminfo_f = fopen(meminfo, "r"))) {
+		sprintf(buf, "%s", "ERR");
+		return;
+	}
+
+	if (fscanf(meminfo_f, "MemTotal: %lu kB\nMemFree: %lu",
+	           &mem_total, &mem_free) == -1) {
+		fclose(meminfo_f);
+		sprintf(buf, "%s", "ERR");
+		return;
+	}
+
+	percent = (100 * (mem_total - mem_free)) / mem_total;
+
+	snprintf(buf, BUF_SIZE, "%lu", percent);
+	fclose(meminfo_f);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -184,11 +212,15 @@ main(int argc, char **argv)
 	XSetErrorHandler(BadWindow_handler);
 
 	/* Maybe don't use static buffers? */
-	char cpu[BUF_SIZE], bat[BUF_SIZE], spotify[BUF_SIZE];
-	char buf[3 * BUF_SIZE];
+	char cpu[BUF_SIZE],
+	     bat[BUF_SIZE],
+	     spotify[BUF_SIZE],
+	     mem[BUF_SIZE];
+	char buf[4 * BUF_SIZE];
 
 	memset(cpu, 0, BUF_SIZE);
 	memset(bat, 0, BUF_SIZE);
+	memset(mem, 0, BUF_SIZE);
 	memset(spotify, 0, BUF_SIZE);
 	
 	while (1) {
@@ -196,14 +228,16 @@ main(int argc, char **argv)
 
 		get_cpu(cpu);
 		get_bat(bat);
+		get_mem(mem);
 		get_spotify(spotify);
 
-		memset(buf, 0, 3 * BUF_SIZE);
+		memset(buf, 0, 4 * BUF_SIZE);
 
 		snprintf(buf, 
-		         3 * BUF_SIZE,
-		         "BAT: %s%% | CPU: %s%% | SPOTIFY: %s",
+		         4 * BUF_SIZE,
+		         "BAT: %s%% | MEM: %s%% | CPU: %s%% | SPOTIFY: %s",
 		         bat,
+		         mem,
 		         cpu,
 		         spotify);
 
